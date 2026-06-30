@@ -92,8 +92,8 @@ function processSingleItem(item, index) {
     throwValidationError(`${index + 1}件目のデータ形式が不正です`);
   }
 
-  const code = validateCode(item.Code || item.code, index);
-  const currentLevel = item.CurrentLevel || item.currentLevel || {};
+  const code = validateCode(getFirstDefined(item.Code, item.code), index);
+  const currentLevel = getFirstDefined(item.CurrentLevel, item.currentLevel) || {};
 
   if (typeof currentLevel !== 'object' || Array.isArray(currentLevel)) {
     throwValidationError(`${index + 1}件目のCurrentLevel形式が不正です`);
@@ -101,17 +101,17 @@ function processSingleItem(item, index) {
 
   return {
     code: code,
-    potential: normalizeInteger(item.Potential || item.potential, RANGES.potential, 'Potential', index),
-    elite: normalizeInteger(currentLevel.Elite || currentLevel.elite, RANGES.elite, 'Elite', index),
-    level: normalizeInteger(currentLevel.Level || currentLevel.level, RANGES.level, 'Level', index),
-    skill: normalizeInteger(currentLevel.Skill || currentLevel.skill, RANGES.skill, 'Skill', index),
-    skill1: normalizeInteger(currentLevel.Skill1 || currentLevel.skill1, RANGES.skill1, 'Skill1', index),
-    skill2: normalizeInteger(currentLevel.Skill2 || currentLevel.skill2, RANGES.skill2, 'Skill2', index),
-    skill3: normalizeInteger(currentLevel.Skill3 || currentLevel.skill3, RANGES.skill3, 'Skill3', index),
-    moduleX: normalizeInteger(currentLevel.ModuleX || currentLevel.moduleX, RANGES.moduleX, 'ModuleX', index),
-    moduleY: normalizeInteger(currentLevel.ModuleY || currentLevel.moduleY, RANGES.moduleY, 'ModuleY', index),
-    moduleD: normalizeInteger(currentLevel.ModuleD || currentLevel.moduleD, RANGES.moduleD, 'ModuleD', index),
-    moduleA: normalizeInteger(currentLevel.ModuleA || currentLevel.moduleA, RANGES.moduleA, 'ModuleA', index)
+    potential: normalizeInteger(getFirstDefined(item.Potential, item.potential), RANGES.potential, 'Potential', index),
+    elite: normalizeInteger(getFirstDefined(currentLevel.Elite, currentLevel.elite), RANGES.elite, 'Elite', index),
+    level: normalizeInteger(getFirstDefined(currentLevel.Level, currentLevel.level), RANGES.level, 'Level', index),
+    skill: normalizeInteger(getFirstDefined(currentLevel.Skill, currentLevel.skill), RANGES.skill, 'Skill', index),
+    skill1: normalizeInteger(getFirstDefined(currentLevel.Skill1, currentLevel.skill1), RANGES.skill1, 'Skill1', index),
+    skill2: normalizeInteger(getFirstDefined(currentLevel.Skill2, currentLevel.skill2), RANGES.skill2, 'Skill2', index),
+    skill3: normalizeInteger(getFirstDefined(currentLevel.Skill3, currentLevel.skill3), RANGES.skill3, 'Skill3', index),
+    moduleX: normalizeInteger(getFirstDefined(currentLevel.ModuleX, currentLevel.moduleX), RANGES.moduleX, 'ModuleX', index),
+    moduleY: normalizeInteger(getFirstDefined(currentLevel.ModuleY, currentLevel.moduleY), RANGES.moduleY, 'ModuleY', index),
+    moduleD: normalizeInteger(getFirstDefined(currentLevel.ModuleD, currentLevel.moduleD), RANGES.moduleD, 'ModuleD', index),
+    moduleA: normalizeInteger(getFirstDefined(currentLevel.ModuleA, currentLevel.moduleA), RANGES.moduleA, 'ModuleA', index)
   };
 }
 
@@ -159,6 +159,16 @@ function normalizeInteger(value, range, fieldName, index) {
   }
 
   return parsed;
+}
+
+/**
+ * undefined / null ではない最初の値を返す。
+ *
+ * @param {...*} values 候補値
+ * @returns {*} 最初に定義されている値
+ */
+function getFirstDefined(...values) {
+  return values.find(value => value !== undefined && value !== null);
 }
 
 /**

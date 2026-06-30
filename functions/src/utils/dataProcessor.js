@@ -2,8 +2,8 @@
  * キャラクターデータを処理するユーティリティ関数
  */
 
-const MAX_OPERATOR_COUNT = 400;
-const MAX_CODE_LENGTH = 64;
+const MAX_OPERATOR_COUNT = 1000;
+const MAX_CODE_LENGTH = 10;
 const CODE_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 const RANGES = {

@@ -8,7 +8,8 @@ const db = admin.firestore();
 const { processOperatorData, isValidationError } = require('../utils/dataProcessor');
 const { generateUniqueId } = require('../utils/idGenerator');
 
-const MAX_REQUEST_BYTES = 128 * 1024;
+// 1000 オペレーター時の概算上限 (~212 KB) を上回る余裕を持たせた値。
+const MAX_REQUEST_BYTES = 512 * 1024;
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
 /**
@@ -36,6 +37,10 @@ exports.saveCharacterData = functions.https.onCall(async (data, context) => {
     return await saveProcessedData(existingId, processedData);
   } catch (error) {
     console.error('データ保存エラー:', error);
+
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
 
     if (isValidationError(error)) {
       throw new functions.https.HttpsError('invalid-argument', error.message);
@@ -71,6 +76,10 @@ exports.getCharacterData = functions.https.onCall(async (data, context) => {
 
     if (error instanceof functions.https.HttpsError) {
       throw error;
+    }
+
+    if (isValidationError(error)) {
+      throw new functions.https.HttpsError('invalid-argument', error.message);
     }
 
     throw new functions.https.HttpsError('internal', error.message);

@@ -3,6 +3,7 @@
  */
 
 const MAX_OPERATOR_COUNT = 1000;
+// 実データの code は最大 6 文字。余裕を持たせつつ異常値を弾く。
 const MAX_CODE_LENGTH = 10;
 const CODE_PATTERN = /^[A-Za-z0-9_-]+$/;
 
@@ -37,10 +38,6 @@ exports.processOperatorData = (data) => {
   }
 
   const processed = items.map((item, index) => processSingleItem(item, index));
-
-  if (processed.length === 0) {
-    throwValidationError('有効なキャラクターデータがありません');
-  }
 
   return processed;
 };

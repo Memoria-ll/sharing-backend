@@ -3,11 +3,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // キャラクターデータコレクションのルール
     match /characterData/{docId} {
-      // 読み取りは誰でも可能（共有URLで閲覧可能にするため）
-      allow read: if true;
-      
-      // 書き込みはCloud Functionsからのみ許可（クライアントからの直接書き込みを禁止）
-      allow write: if false;
+      // 共有データの読み取り・書き込みは Cloud Functions 経由に限定する。
+      // Firebase Admin SDK を使う Cloud Functions はこのルールの影響を受けない。
+      allow read, write: if false;
     }
   }
 }

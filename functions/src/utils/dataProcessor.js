@@ -2,90 +2,172 @@
  * キャラクターデータを処理するユーティリティ関数
  */
 
+const MAX_OPERATOR_COUNT = 400;
+const MAX_CODE_LENGTH = 64;
+const CODE_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+const RANGES = {
+  potential: { min: 1, max: 6, defaultValue: 1 },
+  elite: { min: 0, max: 2, defaultValue: 0 },
+  level: { min: 1, max: 90, defaultValue: 1 },
+  skill: { min: 1, max: 7, defaultValue: 7 },
+  skill1: { min: 0, max: 3, defaultValue: 0 },
+  skill2: { min: 0, max: 3, defaultValue: 0 },
+  skill3: { min: 0, max: 3, defaultValue: 0 },
+  moduleX: { min: 0, max: 3, defaultValue: 0 },
+  moduleY: { min: 0, max: 3, defaultValue: 0 },
+  moduleD: { min: 0, max: 3, defaultValue: 0 },
+  moduleA: { min: 0, max: 3, defaultValue: 0 }
+};
+
 /**
  * 入力データから必要な情報だけを抽出し、整形する
  * @param {Object|Array} data 入力データ（単一オブジェクトまたは配列）
  * @returns {Array} 処理済みのデータ配列
  */
 exports.processOperatorData = (data) => {
-    // 配列でない場合は配列に変換
-    if (!Array.isArray(data)) {
-      data = [data];
-    }
-    
-    // 必要なデータだけを抽出
-    return data.map(item => {
-      // nullチェック
-      if (!item) return null;
-      
-      try {
-        // コードの取得（大文字小文字を区別しない）
-        const code = item.Code || item.code || '';
-        if (!code) return null; // コードがない場合はスキップ
-        
-        // 潜在の取得と数値変換
-        let potential = item.Potential || item.potential || '1';
-        potential = parseInt(potential) || 1;
-        
-        // 現在のレベル情報を取得
-        const currentLevel = item.CurrentLevel || item.currentLevel || {};
-        
-        // 必要なデータを抽出して返す
-        return {
-          code: code,
-          potential: potential,
-          elite: parseInt(currentLevel.Elite || currentLevel.elite) || 0,
-          level: parseInt(currentLevel.Level || currentLevel.level) || 1,
-          skill: parseInt(currentLevel.Skill || currentLevel.skill) || 7,
-          skill1: parseInt(currentLevel.Skill1 || currentLevel.skill1) || 0,
-          skill2: parseInt(currentLevel.Skill2 || currentLevel.skill2) || 0,
-          skill3: parseInt(currentLevel.Skill3 || currentLevel.skill3) || 0,
-          moduleX: parseInt(currentLevel.ModuleX || currentLevel.moduleX) || 0,
-          moduleY: parseInt(currentLevel.ModuleY || currentLevel.moduleY) || 0,
-          moduleD: parseInt(currentLevel.ModuleD || currentLevel.moduleD) || 0,
-          moduleA: parseInt(currentLevel.ModuleA || currentLevel.moduleA) || 0
-        };
-      } catch (error) {
-        console.error('データ処理エラー:', error, 'データ:', item);
-        return null;
-      }
-    }).filter(item => item !== null); // nullの項目を除外
-  };
-  
-  /**
-   * バリデーション関数 - 入力データの形式を検証
-   * @param {Object} data 検証するデータ
-   * @returns {boolean} データが有効かどうか
-   */
-  exports.validateInputData = (data) => {
-    // データが存在するか
-    if (!data) return false;
-    
-    // 配列の場合は各要素を検証
-    if (Array.isArray(data)) {
-      // 空配列はNG
-      if (data.length === 0) return false;
-      // 少なくとも1つの有効要素があればOK
-      return data.some(item => validateSingleItem(item));
-    }
-    
-    // オブジェクトの場合は直接検証
-    return validateSingleItem(data);
-  };
-  
-  /**
-   * 単一アイテムの検証
-   * @param {Object} item 検証する単一アイテム
-   * @returns {boolean} アイテムが有効かどうか
-   */
-  function validateSingleItem(item) {
-    // 基本的な形式チェック
-    if (!item) return false;
-    if (!item.Code && !item.code) return false;
-    
-    // CurrentLevelが存在するか
-    const currentLevel = item.CurrentLevel || item.currentLevel;
-    if (!currentLevel) return false;
-    
-    return true;
+  const items = normalizeToArray(data);
+
+  if (items.length === 0) {
+    throwValidationError('有効なキャラクターデータがありません');
   }
+
+  if (items.length > MAX_OPERATOR_COUNT) {
+    throwValidationError(`キャラクターデータは${MAX_OPERATOR_COUNT}件以内にしてください`);
+  }
+
+  const processed = items.map((item, index) => processSingleItem(item, index));
+
+  if (processed.length === 0) {
+    throwValidationError('有効なキャラクターデータがありません');
+  }
+
+  return processed;
+};
+
+/**
+ * バリデーション関数 - 入力データの形式を検証
+ * @param {Object} data 検証するデータ
+ * @returns {boolean} データが有効かどうか
+ */
+exports.validateInputData = (data) => {
+  try {
+    exports.processOperatorData(data);
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+/**
+ * バリデーションエラーかどうかを判定する。
+ *
+ * @param {Error} error 判定対象のエラー
+ * @returns {boolean} バリデーションエラーなら true
+ */
+exports.isValidationError = (error) => {
+  return Boolean(error && error.code === 'invalid-argument');
+};
+
+/**
+ * 単一または配列の入力を配列化する。
+ *
+ * @param {Object|Array} data 入力データ
+ * @returns {Array} 入力データ配列
+ */
+function normalizeToArray(data) {
+  if (!data) return [];
+  return Array.isArray(data) ? data : [data];
+}
+
+/**
+ * 単一アイテムを検証・整形する。
+ *
+ * @param {Object} item 入力アイテム
+ * @param {number} index 入力配列内の位置
+ * @returns {Object} 整形済みアイテム
+ */
+function processSingleItem(item, index) {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) {
+    throwValidationError(`${index + 1}件目のデータ形式が不正です`);
+  }
+
+  const code = validateCode(item.Code || item.code, index);
+  const currentLevel = item.CurrentLevel || item.currentLevel || {};
+
+  if (typeof currentLevel !== 'object' || Array.isArray(currentLevel)) {
+    throwValidationError(`${index + 1}件目のCurrentLevel形式が不正です`);
+  }
+
+  return {
+    code: code,
+    potential: normalizeInteger(item.Potential || item.potential, RANGES.potential, 'Potential', index),
+    elite: normalizeInteger(currentLevel.Elite || currentLevel.elite, RANGES.elite, 'Elite', index),
+    level: normalizeInteger(currentLevel.Level || currentLevel.level, RANGES.level, 'Level', index),
+    skill: normalizeInteger(currentLevel.Skill || currentLevel.skill, RANGES.skill, 'Skill', index),
+    skill1: normalizeInteger(currentLevel.Skill1 || currentLevel.skill1, RANGES.skill1, 'Skill1', index),
+    skill2: normalizeInteger(currentLevel.Skill2 || currentLevel.skill2, RANGES.skill2, 'Skill2', index),
+    skill3: normalizeInteger(currentLevel.Skill3 || currentLevel.skill3, RANGES.skill3, 'Skill3', index),
+    moduleX: normalizeInteger(currentLevel.ModuleX || currentLevel.moduleX, RANGES.moduleX, 'ModuleX', index),
+    moduleY: normalizeInteger(currentLevel.ModuleY || currentLevel.moduleY, RANGES.moduleY, 'ModuleY', index),
+    moduleD: normalizeInteger(currentLevel.ModuleD || currentLevel.moduleD, RANGES.moduleD, 'ModuleD', index),
+    moduleA: normalizeInteger(currentLevel.ModuleA || currentLevel.moduleA, RANGES.moduleA, 'ModuleA', index)
+  };
+}
+
+/**
+ * code を検証する。
+ *
+ * @param {string} value code 値
+ * @param {number} index 入力配列内の位置
+ * @returns {string} 検証済み code
+ */
+function validateCode(value, index) {
+  if (typeof value !== 'string') {
+    throwValidationError(`${index + 1}件目のCodeが不正です`);
+  }
+
+  const code = value.trim();
+  if (!code) {
+    throwValidationError(`${index + 1}件目のCodeが空です`);
+  }
+
+  if (code.length > MAX_CODE_LENGTH || !CODE_PATTERN.test(code)) {
+    throwValidationError(`${index + 1}件目のCode形式が不正です`);
+  }
+
+  return code;
+}
+
+/**
+ * 整数値を検証・正規化する。
+ *
+ * @param {*} value 入力値
+ * @param {Object} range 許容範囲
+ * @param {string} fieldName フィールド名
+ * @param {number} index 入力配列内の位置
+ * @returns {number} 正規化済み整数
+ */
+function normalizeInteger(value, range, fieldName, index) {
+  const normalizedValue = value === undefined || value === null || value === '' ? range.defaultValue : value;
+  const parsed = Number(normalizedValue);
+
+  if (!Number.isInteger(parsed) || parsed < range.min || parsed > range.max) {
+    throwValidationError(
+      `${index + 1}件目の${fieldName}は${range.min}〜${range.max}の整数にしてください`
+    );
+  }
+
+  return parsed;
+}
+
+/**
+ * バリデーションエラーを送出する。
+ *
+ * @param {string} message エラーメッセージ
+ */
+function throwValidationError(message) {
+  const error = new Error(message);
+  error.code = 'invalid-argument';
+  throw error;
+}

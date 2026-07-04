@@ -23,42 +23,37 @@ Firebase バックエンドサービスを提供するリポジトリです。�
 
 **エンドポイント:** POST https://asia-northeast1-arknights-sharing-view.cloudfunctions.net/saveCharacterDataHttp
 
-**新規作成リクエスト形式:**
-```json
-{
-  "Code": "LM04",
-  "Rarity": 6,
-  "Potential": "3",
-  "Trust": null,
-  "Paradox": false,
-  "CurrentLevel": {
-    "Rarity": 6,
-    "Elite": 2,
-    "Level": 51,
-    "Skill": 7,
-    "Skill1": 3,
-    "Skill2": 0,
-    "Skill3": 0,
-    "ModuleX": 0,
-    "ModuleY": 0,
-    "ModuleD": 0,
-    "ModuleA": 0
-  }
-}
-```
+**リクエスト制限:**
+- リクエストボディ: 128KB以内
+- オペレーター件数: 1000件以内
 
-**既存IDを使った更新リクエスト形式:**
+**保存されるフィールド:**
+
+| フィールド | 説明 | 型 | 許容範囲 |
+|---|---|---|---|
+| `Code` / `code` | オペレーターコード | string | 英数字・`_`・`-`、10文字以内 |
+| `Potential` / `potential` | 潜在 | integer | 1〜6 |
+| `CurrentLevel.Elite` | 昇進 | integer | 0〜2 |
+| `CurrentLevel.Level` | レベル | integer | 1〜90 |
+| `CurrentLevel.Skill` | スキルランク | integer | 1〜7 |
+| `CurrentLevel.Skill1` | スキル特化1 | integer | 0〜3 |
+| `CurrentLevel.Skill2` | スキル特化2 | integer | 0〜3 |
+| `CurrentLevel.Skill3` | スキル特化3 | integer | 0〜3 |
+| `CurrentLevel.ModuleX` | モジュールX | integer | 0〜3 |
+| `CurrentLevel.ModuleY` | モジュールY | integer | 0〜3 |
+| `CurrentLevel.ModuleD` | モジュールD | integer | 0〜3 |
+| `CurrentLevel.ModuleA` | モジュールA | integer | 0〜3 |
+
+上記以外のフィールド（`Rarity`、`Trust`、`Paradox` 等）は無視されます。
+各フィールドはキャメルケース・パスカルケースどちらも受け付けます。
+
+**新規作成リクエスト形式（配列）:**
 ```json
-{
-  "id": "abc123",
-  "data": {
+[
+  {
     "Code": "LM04",
-    "Rarity": 6,
     "Potential": "3",
-    "Trust": null,
-    "Paradox": false,
     "CurrentLevel": {
-      "Rarity": 6,
       "Elite": 2,
       "Level": 51,
       "Skill": 7,
@@ -70,14 +65,59 @@ Firebase バックエンドサービスを提供するリポジトリです。�
       "ModuleD": 0,
       "ModuleA": 0
     }
+  },
+  {
+    "Code": "GG01",
+    "Potential": 6,
+    "CurrentLevel": {
+      "Elite": 2,
+      "Level": 90,
+      "Skill": 7,
+      "Skill1": 3,
+      "Skill2": 3,
+      "Skill3": 3,
+      "ModuleX": 3,
+      "ModuleY": 0,
+      "ModuleD": 0,
+      "ModuleA": 0
+    }
   }
+]
+```
+
+単一オブジェクト形式も受け付けます。
+
+**既存IDを使った更新リクエスト形式:**
+```json
+{
+  "id": "aBcD3fGhJk",
+  "data": [
+    {
+      "Code": "LM04",
+      "Potential": "3",
+      "CurrentLevel": {
+        "Elite": 2,
+        "Level": 51,
+        "Skill": 7,
+        "Skill1": 3,
+        "Skill2": 0,
+        "Skill3": 0,
+        "ModuleX": 0,
+        "ModuleY": 0,
+        "ModuleD": 0,
+        "ModuleA": 0
+      }
+    }
+  ]
 }
 ```
+
+指定IDが存在しない場合は新規IDで作成されます。
 
 **レスポンス形式:**
 ```json
 {
-  "id": "abc123"
+  "id": "aBcD3fGhJk"
 }
 ```
 

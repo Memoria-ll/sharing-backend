@@ -21,7 +21,7 @@ Firebase バックエンドサービスを提供するリポジトリです。�
 
 ### データ保存/更新API
 
-**エンドポイント:** POST https://asia-northeast1-arknights-sharing-view.cloudfunctions.net/saveCharacterDataHttp
+**エンドポイント:** POST https://us-central1-arknights-sharing-view.cloudfunctions.net/saveCharacterDataHttp
 
 **リクエスト制限:**
 - リクエストボディ: 128KB以内
@@ -123,7 +123,7 @@ Firebase バックエンドサービスを提供するリポジトリです。�
 
 ### データ取得API
 
-**エンドポイント:** GET https://asia-northeast1-arknights-sharing-view.cloudfunctions.net/getCharacterDataHttp?id={dataId}
+**エンドポイント:** GET https://us-central1-arknights-sharing-view.cloudfunctions.net/getCharacterDataHttp?id={dataId}
 
 **レスポンス形式:**
 ```json

@@ -24,8 +24,9 @@ Firebase バックエンドサービスを提供するリポジトリです。�
 **エンドポイント:** POST https://us-central1-arknights-sharing-view.cloudfunctions.net/saveCharacterDataHttp
 
 **リクエスト制限:**
-- リクエストボディ: 128KB以内
+- リクエストボディ: 512KB以内
 - オペレーター件数: 1000件以内
+- モジュール種別: 20種類以内（リクエスト全体で送信されたモジュール接尾辞の種類数）
 
 **保存されるフィールド:**
 
@@ -39,12 +40,11 @@ Firebase バックエンドサービスを提供するリポジトリです。�
 | `CurrentLevel.Skill1` | スキル特化1 | integer | 0〜3 |
 | `CurrentLevel.Skill2` | スキル特化2 | integer | 0〜3 |
 | `CurrentLevel.Skill3` | スキル特化3 | integer | 0〜3 |
-| `CurrentLevel.ModuleX` | モジュールX | integer | 0〜3 |
-| `CurrentLevel.ModuleY` | モジュールY | integer | 0〜3 |
-| `CurrentLevel.ModuleD` | モジュールD | integer | 0〜3 |
-| `CurrentLevel.ModuleA` | モジュールA | integer | 0〜3 |
+| `CurrentLevel.Module<種別>` | モジュール | integer | 0〜3 |
 
-上記以外のフィールド（`Rarity`、`Trust`、`Paradox` 等）は無視されます。
+`Module<種別>` の種別はマスターが定義する（例: `ModuleX` / `ModuleB`）。受理される接尾辞は
+大文字`A-Z`・数字`0-9`のみ1〜4文字（`ModuleX` / `ModuleXY` / `ModuleA2` など）で、種別が
+増えてもAPI側の変更は不要です。上記以外のフィールド（`Rarity`、`Trust`、`Paradox` 等）は無視されます。
 各フィールドはキャメルケース・パスカルケースどちらも受け付けます。
 
 **新規作成リクエスト形式（配列）:**
@@ -63,7 +63,8 @@ Firebase バックエンドサービスを提供するリポジトリです。�
       "ModuleX": 0,
       "ModuleY": 0,
       "ModuleD": 0,
-      "ModuleA": 0
+      "ModuleA": 0,
+      "ModuleB": 0
     }
   },
   {
@@ -79,7 +80,8 @@ Firebase バックエンドサービスを提供するリポジトリです。�
       "ModuleX": 3,
       "ModuleY": 0,
       "ModuleD": 0,
-      "ModuleA": 0
+      "ModuleA": 0,
+      "ModuleB": 0
     }
   }
 ]
@@ -105,7 +107,8 @@ Firebase バックエンドサービスを提供するリポジトリです。�
         "ModuleX": 0,
         "ModuleY": 0,
         "ModuleD": 0,
-        "ModuleA": 0
+        "ModuleA": 0,
+        "ModuleB": 0
       }
     }
   ]
@@ -141,7 +144,8 @@ Firebase バックエンドサービスを提供するリポジトリです。�
       "moduleX": 0,
       "moduleY": 0,
       "moduleD": 0,
-      "moduleA": 0
+      "moduleA": 0,
+      "moduleB": 0
     }
   ],
   "createdAt": "Timestamp",
@@ -149,6 +153,9 @@ Firebase バックエンドサービスを提供するリポジトリです。�
   "expiresAt": "Timestamp"
 }
 ```
+
+モジュールキーは送信されたモジュール種別に応じて増減します（`module<種別>` の形。
+どのアイテムにもモジュールキーが含まれないリクエストでは、保存データにモジュールキーは含まれません）。
 
 ## データの有効期限
 

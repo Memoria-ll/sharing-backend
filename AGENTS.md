@@ -49,3 +49,5 @@ Firebase Cloud Functions。API 仕様は README.md が正。
 - `functions/node_modules` が未インストールでも `node --test` は回る（`dataProcessor.js` が firebase を require しない純粋モジュールのため）。
 - `processOperatorData` の呼び出しは `api/character.js` の Callable save と HTTP save の2経路のみ。取得系（`getCharacterData` / `handleGetRequest`）は `doc.data()` を素通しするだけで通らない。
 - `npm run lint` は `echo 'Linting skipped'` のスタブ。実質のリントは無い。
+- デプロイ workflow の `firebase deploy` には `--force` が要る。無いと**5関数すべてのデプロイに成功したうえで**「could not set up cleanup policy in location us-central1」で exit 1 になり、ジョブだけが赤くなる。赤を見たらまずログ末尾を読み、関数が `Successful update operation` になっているか確認すること。
+- workflow は `firebase-tools` をバージョン固定せず `npm install -g` している。CLI 側の仕様変更がそのままデプロイ失敗として現れる。

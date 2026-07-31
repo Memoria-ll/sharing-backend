@@ -3,6 +3,7 @@
   "description": "Cloud Functions for Arknights Viewer",
   "scripts": {
     "lint": "echo 'Linting skipped'",
+    "test": "node --test",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
